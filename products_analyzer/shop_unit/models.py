@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from shop_unit.helpers import SHOP_UNIT_TYPES
+from shop_unit.helpers import ShopUnitTypes
 
 
 class ShopUnit(models.Model):
@@ -31,7 +31,6 @@ class ShopUnit(models.Model):
                             max_length=120)
 
     date = models.DateTimeField(null=False,
-                                auto_now_add=True,
                                 verbose_name='Время последнего обновления элемента')
 
     # todo
@@ -46,9 +45,10 @@ class ShopUnit(models.Model):
                                on_delete=models.CASCADE,
                                blank=True)
 
-    type = models.SmallIntegerField(null=False,
-                                    choices=SHOP_UNIT_TYPES,
-                                    verbose_name='Тип элемента - категория или товар')
+    type = models.CharField(null=False,
+                            choices=ShopUnitTypes.to_choices(),
+                            verbose_name='Тип элемента - категория или товар',
+                            max_length=120)
 
     price = models.IntegerField(null=True,
                                 verbose_name='Цена',

@@ -172,6 +172,8 @@ EXPECTED_TREE = {
 
 def request(path, method="GET", data=None, json_response=False):
     try:
+        if not path.endswith('/'):
+            path += '/'
         params = {
             "url": f"{API_BASEURL}{path}",
             "method": method,
