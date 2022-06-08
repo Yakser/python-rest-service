@@ -1,19 +1,13 @@
-from django.http import Http404
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from shop_unit.helpers import format_date
+from shop_unit.helpers import calculate_category_price
 from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
-
-
-class BaseShopUnitView(APIView):
-    def get_object(self, pk):
-        try:
-            return ShopUnit.objects.get(pk=pk)
-        except ShopUnit.DoesNotExist:
-            raise Http404
+from shop_unit.types import ShopUnitTypes
+from shop_unit.validators import (validate_date, validate_id, validate_name,
+                                  validate_type)
 
 
 class ShopUnitList(APIView):
@@ -27,34 +21,72 @@ class ShopUnitList(APIView):
         return Response(serializer.data)
 
 
-class ShopUnitDetail(BaseShopUnitView):
+class ShopUnitDetail(APIView):
     def get(self, request, pk, format=None):
-        shop_unit = self.get_object(pk)
-        serializer = ShopUnitSerializer(shop_unit,
-                                        context={'request': request})
-        return Response(serializer.data)
+        try:
+            shop_unit = ShopUnit.objects.get(pk=pk)
+
+            if shop_unit.type == ShopUnitTypes.CATEGORY.name:
+                shop_unit.price = calculate_category_price(shop_unit)
+
+            serializer = ShopUnitSerializer(shop_unit,
+                                            context={'request': request})
+
+            return Response(serializer.data)
+
+        except ShopUnit.DoesNotExist:
+            return Response({
+                'code': status.HTTP_404_NOT_FOUND,
+                'message': 'Категория/товар не найден'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(e)
+            return Response([
+                status.HTTP_400_BAD_REQUEST,
+                'Невалидная схема документа или входные данные не верны.'
+            ], status=status.HTTP_400_BAD_REQUEST)
 
 
-class ShopUnitDelete(BaseShopUnitView):
+class ShopUnitDelete(APIView):
     def delete(self, request, pk, format=None):
-        shop_unit = self.get_object(pk)
-        shop_unit.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            shop_unit = ShopUnit.objects.get(pk=pk)
+            shop_unit.delete()
+            return Response([status.HTTP_200_OK, 'Удаление прошло успешно.'],
+                            status=status.HTTP_200_OK)
+        except ShopUnit.DoesNotExist:
+            # Would be nice to log error
+            return Response({
+                'code': status.HTTP_404_NOT_FOUND,
+                'message': 'Категория/товар не найден'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            # Would be nice to log error
+            print(e)
+            return Response([
+                status.HTTP_400_BAD_REQUEST,
+                'Невалидная схема документа или входные данные не верны.'
+            ], status=status.HTTP_400_BAD_REQUEST)
 
 
 class ShopUnitImports(APIView):
     def post(self, request, format=None):
         try:
             data = request.data
+
+            validate_date(data.get('updateDate', ''))
+
             items = data['items']
-            update_date = format_date(data['updateDate'])
 
-            # todo validation
             for item in items:
+                validate_type(item.get('type', ''))
+                validate_name(item.get('name', ''))
+                validate_id(item.get('id', ''))
 
-                parent = None
-                if item['parentId']:
-                    parent = ShopUnit.objects.get(id=item['parentId'])
+                if item.get('parentId', None):
+                    parent = ShopUnit.objects.get(id=item.get('parentId', None))
+                else:
+                    parent = None
 
                 price = item.get('price', None)
 
@@ -62,19 +94,25 @@ class ShopUnitImports(APIView):
                                                                   name=item['name'],
                                                                   type=item['type'],
                                                                   parent=parent,
-                                                                  date=update_date,
+                                                                  date=data['updateDate'],
                                                                   price=price)
                 unit.save()
 
             return Response([
-                200,
+                status.HTTP_200_OK,
                 'Вставка или обновление прошли успешно.'
             ])
-
+        except AssertionError as e:
+            # Would be nice to log error
+            print(e)
+            return Response([
+                status.HTTP_400_BAD_REQUEST,
+                'Невалидная схема документа или входные данные не верны.'
+            ], status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             # Would be nice to log error
             print(e)
             return Response([
-                400,
+                status.HTTP_400_BAD_REQUEST,
                 'Невалидная схема документа или входные данные не верны.'
-            ])
+            ], status=status.HTTP_400_BAD_REQUEST)

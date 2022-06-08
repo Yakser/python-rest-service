@@ -16,6 +16,97 @@ API_BASEURL = config("API_BASEURL",
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
 
+
+INCORRECT_IMPORT_BATCHES = [
+    {
+        "items": [
+            {
+                "type": "CATEGORY",
+                # name is null
+                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                "parentId": None,
+                "children": []
+            }
+        ],
+        "updateDate": "2022-02-01T12:00:00.000Z"
+    },
+    {
+        "items": [
+            {
+                # type is null
+                "name": "Товары",
+                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                "parentId": None,
+                "children": []
+            }
+        ],
+        "updateDate": "2022-02-01T12:00:00.000Z"
+    },
+
+    {
+        "items": [
+            {
+                "type": "INCORRECT-TYPE",  # type is incorrect
+                "name": "Товары",
+                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                "parentId": None,
+                "children": []
+            }
+        ],
+        "updateDate": "2022-02-01T12:00:00.000Z"
+    },
+    {
+        "items": [
+            {
+                "type": "CATEGORY",
+                "name": "Товары",
+                # id is null
+                "parentId": None,
+                "children": []
+            }
+        ],
+        "updateDate": "2022-02-01T12:00:00.000Z"
+    },
+    {
+        "items": [
+            {
+                "type": "CATEGORY",
+                "name": "Товары",
+                "id": "incorrect id",  # incorrect id
+                "parentId": None,
+                "children": []
+            }
+        ],
+        "updateDate": "2022-02-01T12:00:00.000Z"
+    },
+    {
+        "items": [
+            {
+                "type": "CATEGORY",
+                "name": "Товары",
+                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                "parentId": None,
+                "children": []
+            }
+        ],
+        # date is null
+    },
+    {
+        "items": [
+            {
+                "type": "CATEGORY",
+                "name": "Товары",
+                "id": "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1",
+                "parentId": None,
+                "children": []
+            }
+        ],
+        "updateDate": "2022/02/01/12"  # incorrect date format
+    },
+
+]
+
+
 IMPORT_BATCHES = [
     {
         "items": [
@@ -226,6 +317,17 @@ def test_import():
         assert status == 200, f"Expected HTTP status code 200, got {status}"
 
     print("Test import passed.")
+
+
+def test_incorrect_import():
+    print('Test incorrect import')
+    for index, batch in enumerate(INCORRECT_IMPORT_BATCHES):
+        print(f"Importing batch {index}")
+        status, _ = request("/imports", method="POST", data=batch)
+
+        assert status == 400, f"Expected HTTP status code 400, got {status}"
+
+    print("Test incorrect import passed.")
 
 
 def test_nodes():

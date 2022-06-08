@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from shop_unit.helpers import ShopUnitTypes
+from shop_unit.types import ShopUnitTypes
 
 
 class ShopUnit(models.Model):
