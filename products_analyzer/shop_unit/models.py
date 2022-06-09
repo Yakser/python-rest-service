@@ -2,7 +2,6 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from shop_unit.validators import validate_parent, validate_shop_unit
 
 
 from shop_unit.types import ShopUnitTypes
@@ -59,11 +58,25 @@ class ShopUnit(models.Model):
 
     def clean(self):
         try:
-            validate_shop_unit(self)
-            validate_parent(self.parent)
+            self._validate_all()
 
         except Exception as e:
             raise ValidationError(f"Validation failed: {e}")
+
+    def _validate_all(self) -> None:
+        self._validate_price()
+        self._validate_parent()
+
+    def _validate_parent(self) -> None:
+        if self.parent:
+            assert self.parent.type == ShopUnitTypes.CATEGORY.name, 'Only category can be a parent'
+        assert self.parent != self, 'Category cannot be a parent of itself'
+
+    def _validate_price(self) -> None:
+        if self.type == ShopUnitTypes.OFFER.name:
+            assert self.price and self.price > 0, 'Offer must have price greater than 0'
+        if self.type == ShopUnitTypes.CATEGORY.name:
+            assert self.price is None, 'Category price must be None(null) by default'
 
     class Meta:
         verbose_name = 'Shop Unit'
