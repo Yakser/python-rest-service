@@ -1,10 +1,9 @@
 import uuid
 
-from shop_unit.models import ShopUnit
 from shop_unit.types import ShopUnitTypes
 
 
-def calculate_category_price(category: ShopUnit) -> int | None:
+def calculate_category_price(category) -> int | None:
     children = get_all_children(category)
     count = len(children)
     if count:
@@ -13,7 +12,7 @@ def calculate_category_price(category: ShopUnit) -> int | None:
     return None
 
 
-def get_all_children(unit: ShopUnit, visited=None) -> set:
+def get_all_children(unit, visited=None) -> set:
     """
     Returns all children of this category
 

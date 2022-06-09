@@ -1,6 +1,9 @@
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db import models
+from shop_unit.validators import validate_parent, validate_shop_unit
+
 
 from shop_unit.types import ShopUnitTypes
 
@@ -33,11 +36,6 @@ class ShopUnit(models.Model):
     date = models.DateTimeField(null=False,
                                 verbose_name='Время последнего обновления элемента')
 
-    # todo
-    # parent_id = models.UUIDField(null=True,
-    #                              verbose_name='UUID родительской категории',
-    #                              )
-
     parent = models.ForeignKey('self',
                                null=True,
                                verbose_name='Родительская категория',
@@ -58,6 +56,14 @@ class ShopUnit(models.Model):
                                             в меньшую сторону до целого числа. Если категория\
                                                 не содержит товаров цена равна null.',
                                 blank=True)
+
+    def clean(self):
+        try:
+            validate_shop_unit(self)
+            validate_parent(self.parent)
+
+        except Exception as e:
+            raise ValidationError(f"Validation failed: {e}")
 
     class Meta:
         verbose_name = 'Shop Unit'
