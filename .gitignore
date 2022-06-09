@@ -132,3 +132,5 @@ dmypy.json
 .vscode
 .flake8
 
+expected.json
+response.json
