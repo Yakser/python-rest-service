@@ -8,8 +8,8 @@ from shop_unit.helpers import calculate_category_price
 from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
 from shop_unit.types import ShopUnitTypes
-from shop_unit.validators import (validate_date, validate_id, validate_name,
-                                  validate_type)
+from shop_unit.validators import (validate_date, validate_parent,
+                                  validate_shop_unit)
 
 
 class ShopUnitList(APIView):
@@ -30,6 +30,7 @@ class ShopUnitDetail(APIView):
 
             if shop_unit.type == ShopUnitTypes.CATEGORY.name:
                 shop_unit.price = calculate_category_price(shop_unit)
+                shop_unit.save()
 
             serializer = ShopUnitSerializer(shop_unit,
                                             context={'request': request})
@@ -61,29 +62,24 @@ class ShopUnitImports(APIView):
     def post(self, request, format=None):
         try:
             data = request.data
-
             validate_date(data.get('updateDate', ''))
-
             items = data['items']
 
             for item in items:
-                validate_type(item.get('type', ''))
-                validate_name(item.get('name', ''))
-                validate_id(item.get('id', ''))
+                validate_shop_unit(item)
 
                 if item.get('parentId', None):
                     parent = ShopUnit.objects.get(id=item.get('parentId', None))
+                    validate_parent(parent)
                 else:
                     parent = None
 
-                price = item.get('price', None)
-
-                unit, created = ShopUnit.objects.update_or_create(id=item['id'],
-                                                                  name=item['name'],
-                                                                  type=item['type'],
-                                                                  parent=parent,
-                                                                  date=data['updateDate'],
-                                                                  price=price)
+                unit, _ = ShopUnit.objects.update_or_create(id=item['id'],
+                                                            name=item['name'],
+                                                            type=item['type'],
+                                                            parent=parent,
+                                                            date=data['updateDate'],
+                                                            price=item.get('price', None))
                 unit.save()
 
             return OK_RESPONSE

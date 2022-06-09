@@ -1,3 +1,5 @@
+import uuid
+
 from shop_unit.models import ShopUnit
 from shop_unit.types import ShopUnitTypes
 
@@ -31,3 +33,17 @@ def get_all_children(unit: ShopUnit, visited=None) -> set:
             visited.add(child)
 
     return visited
+
+
+def remove_timezone_suffix(date: str) -> str:
+    if date.endswith('Z'):
+        return date[:-1]
+    return date
+
+
+def is_valid_uuid(value: str) -> bool:
+    try:
+        uuid.UUID(str(value))
+        return True
+    except ValueError:
+        return False
