@@ -1,7 +1,9 @@
-from rest_framework import permissions, status
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from shop_unit.errors import (ITEM_NOT_FOUND_RESPONSE, OK_RESPONSE,
+                              VALIDATION_FAILED_RESPONSE)
 from shop_unit.helpers import calculate_category_price
 from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
@@ -35,16 +37,10 @@ class ShopUnitDetail(APIView):
             return Response(serializer.data)
 
         except ShopUnit.DoesNotExist:
-            return Response({
-                'code': status.HTTP_404_NOT_FOUND,
-                'message': 'Категория/товар не найден'
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            print(e)
-            return Response([
-                status.HTTP_400_BAD_REQUEST,
-                'Невалидная схема документа или входные данные не верны.'
-            ], status=status.HTTP_400_BAD_REQUEST)
+            return ITEM_NOT_FOUND_RESPONSE
+
+        except Exception:
+            return VALIDATION_FAILED_RESPONSE
 
 
 class ShopUnitDelete(APIView):
@@ -52,21 +48,13 @@ class ShopUnitDelete(APIView):
         try:
             shop_unit = ShopUnit.objects.get(pk=pk)
             shop_unit.delete()
-            return Response([status.HTTP_200_OK, 'Удаление прошло успешно.'],
-                            status=status.HTTP_200_OK)
+            return OK_RESPONSE
+
         except ShopUnit.DoesNotExist:
-            # Would be nice to log error
-            return Response({
-                'code': status.HTTP_404_NOT_FOUND,
-                'message': 'Категория/товар не найден'
-            }, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            # Would be nice to log error
-            print(e)
-            return Response([
-                status.HTTP_400_BAD_REQUEST,
-                'Невалидная схема документа или входные данные не верны.'
-            ], status=status.HTTP_400_BAD_REQUEST)
+            return ITEM_NOT_FOUND_RESPONSE
+
+        except Exception:
+            return VALIDATION_FAILED_RESPONSE
 
 
 class ShopUnitImports(APIView):
@@ -98,21 +86,7 @@ class ShopUnitImports(APIView):
                                                                   price=price)
                 unit.save()
 
-            return Response([
-                status.HTTP_200_OK,
-                'Вставка или обновление прошли успешно.'
-            ])
-        except AssertionError as e:
-            # Would be nice to log error
-            print(e)
-            return Response([
-                status.HTTP_400_BAD_REQUEST,
-                'Невалидная схема документа или входные данные не верны.'
-            ], status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            # Would be nice to log error
-            print(e)
-            return Response([
-                status.HTTP_400_BAD_REQUEST,
-                'Невалидная схема документа или входные данные не верны.'
-            ], status=status.HTTP_400_BAD_REQUEST)
+            return OK_RESPONSE
+
+        except AssertionError:
+            return VALIDATION_FAILED_RESPONSE
