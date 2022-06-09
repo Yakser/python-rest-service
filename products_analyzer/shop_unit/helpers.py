@@ -4,11 +4,13 @@ from shop_unit.models import ShopUnit
 from shop_unit.types import ShopUnitTypes
 
 
-def calculate_category_price(category: ShopUnit) -> int:
+def calculate_category_price(category: ShopUnit) -> int | None:
     children = get_all_children(category)
     count = len(children)
-    total_price = sum(child.price for child in children)
-    return int(total_price / count)
+    if count:
+        total_price = sum(child.price for child in children)
+        return int(total_price / count)
+    return None
 
 
 def get_all_children(unit: ShopUnit, visited=None) -> set:

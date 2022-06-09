@@ -37,10 +37,12 @@ class ShopUnitDetail(APIView):
 
             return Response(serializer.data)
 
-        except ShopUnit.DoesNotExist:
+        except ShopUnit.DoesNotExist as e:
+            print(e)
             return ITEM_NOT_FOUND_RESPONSE
 
-        except Exception:
+        except Exception as e:
+            print(e)
             return VALIDATION_FAILED_RESPONSE
 
 
@@ -51,10 +53,12 @@ class ShopUnitDelete(APIView):
             shop_unit.delete()
             return OK_RESPONSE
 
-        except ShopUnit.DoesNotExist:
+        except ShopUnit.DoesNotExist as e:
+            print(e)
             return ITEM_NOT_FOUND_RESPONSE
 
-        except Exception:
+        except Exception as e:
+            print(e)
             return VALIDATION_FAILED_RESPONSE
 
 
@@ -74,15 +78,16 @@ class ShopUnitImports(APIView):
                 else:
                     parent = None
 
-                unit, _ = ShopUnit.objects.update_or_create(id=item['id'],
-                                                            name=item['name'],
-                                                            type=item['type'],
+                unit, _ = ShopUnit.objects.update_or_create(id=item.get('id', ''),
+                                                            name=item.get('name', ''),
+                                                            type=item.get('type', ''),
                                                             parent=parent,
-                                                            date=data['updateDate'],
+                                                            date=item.get('updateDate', ''),
                                                             price=item.get('price', None))
                 unit.save()
 
             return OK_RESPONSE
 
-        except AssertionError:
+        except AssertionError as e:
+            print(e)
             return VALIDATION_FAILED_RESPONSE

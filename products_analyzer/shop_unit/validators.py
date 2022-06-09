@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from shop_unit.helpers import is_valid_uuid, remove_timezone_suffix
 from shop_unit.models import ShopUnit
 from shop_unit.types import ShopUnitTypes
