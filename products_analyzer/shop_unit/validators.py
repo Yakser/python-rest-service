@@ -19,7 +19,7 @@ def validate_id(unit_id: str) -> None:
 
 def validate_date(date: str) -> None:
     try:
-        clear_date = remove_timezone_suffix(date.strip())
+        clear_date = remove_timezone_suffix(date)
         datetime.fromisoformat(clear_date)
     except Exception as e:
         raise AssertionError(f'Incorrect or empty ShopUnit update date: {e}')

@@ -66,7 +66,8 @@ class ShopUnitImports(APIView):
     def post(self, request, format=None):
         try:
             data = request.data
-            validate_date(data.get('updateDate', ''))
+            update_date = data.get('updateDate', '')
+            validate_date(update_date)
             items = data['items']
 
             for item in items:
@@ -82,7 +83,7 @@ class ShopUnitImports(APIView):
                                                             name=item.get('name', ''),
                                                             type=item.get('type', ''),
                                                             parent=parent,
-                                                            date=item.get('updateDate', ''),
+                                                            date=update_date,
                                                             price=item.get('price', None))
                 unit.save()
 
