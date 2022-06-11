@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from shop_unit.errors import (ITEM_NOT_FOUND_RESPONSE, OK_RESPONSE,
                               VALIDATION_FAILED_RESPONSE)
-from shop_unit.helpers import calculate_category_price
+from shop_unit.helpers import calculate_category_price, format_shop_unit_data, build_tree
 from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
 from shop_unit.types import ShopUnitTypes
@@ -35,17 +35,10 @@ class ShopUnitDetail(APIView):
             serializer = ShopUnitSerializer(shop_unit,
                                             context={'request': request})
 
-            data = serializer.data
-
-            data['parentId'] = None
-            if shop_unit.parent:
-                data['parentId'] = shop_unit.parent.id
-
-            del data['parent']
+            data = format_shop_unit_data(shop_unit, serializer.data)
 
             if shop_unit.type == ShopUnitTypes.CATEGORY.name:
-                data['children'] = []
-                # recursively find children
+                data['children'] = build_tree(shop_unit, request)
 
             return Response(data)
 
