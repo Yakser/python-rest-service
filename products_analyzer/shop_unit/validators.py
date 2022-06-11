@@ -5,8 +5,11 @@ from shop_unit.models import ShopUnit
 from shop_unit.types import ShopUnitTypes
 
 
-def validate_type(unit_type: str) -> None:
-    assert any(unit_type == tp.name for tp in ShopUnitTypes), 'Incorrect or empty ShopUnit type'
+def validate_type(unit_type: str, is_new_instance: bool = True) -> None:
+    if is_new_instance:
+        assert any(unit_type == tp.name for tp in ShopUnitTypes), 'Incorrect or empty ShopUnit type'
+    else:
+        raise AssertionError("You cannot update the type of ShopUnit")
 
 
 def validate_name(name: str) -> None:
@@ -37,7 +40,6 @@ def validate_price(unit) -> None:
 
 
 def validate_shop_unit(unit):
-    validate_type(unit.get('type', ''))
     validate_name(unit.get('name', ''))
     validate_id(unit.get('id', ''))
     validate_price(unit)
