@@ -9,7 +9,7 @@ from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
 from shop_unit.types import ShopUnitTypes
 from shop_unit.validators import (validate_date, validate_parent,
-                                  validate_shop_unit)
+                                  validate_shop_unit, validate_type)
 
 
 class ShopUnitList(APIView):
@@ -35,7 +35,19 @@ class ShopUnitDetail(APIView):
             serializer = ShopUnitSerializer(shop_unit,
                                             context={'request': request})
 
-            return Response(serializer.data)
+            data = serializer.data
+
+            data['parentId'] = None
+            if shop_unit.parent:
+                data['parentId'] = shop_unit.parent.id
+
+            del data['parent']
+
+            if shop_unit.type == ShopUnitTypes.CATEGORY.name:
+                data['children'] = []
+                # recursively find children
+
+            return Response(data)
 
         except ShopUnit.DoesNotExist as e:
             print(e)
@@ -66,7 +78,8 @@ class ShopUnitImports(APIView):
     def post(self, request, format=None):
         try:
             data = request.data
-            validate_date(data.get('updateDate', ''))
+            update_date = data.get('updateDate', '')
+            validate_date(update_date)
             items = data['items']
 
             for item in items:
@@ -78,12 +91,33 @@ class ShopUnitImports(APIView):
                 else:
                     parent = None
 
-                unit, _ = ShopUnit.objects.update_or_create(id=item.get('id', ''),
-                                                            name=item.get('name', ''),
-                                                            type=item.get('type', ''),
-                                                            parent=parent,
-                                                            date=item.get('updateDate', ''),
-                                                            price=item.get('price', None))
+                id_ = item.get('id', '')
+                name = item.get('name', '')
+                type_ = item.get('type', '')
+                price = item.get('price', None)
+
+                units = ShopUnit.objects.filter(id=id_)
+
+                if units:
+                    unit = units.first()
+                    if name:
+                        unit.name = name
+
+                    if type_ != unit.type:
+                        validate_type(type_, is_new_instance=False)
+
+                    if price:
+                        unit.price = price
+
+                else:
+                    validate_type(type_)
+
+                    unit = ShopUnit(id=id_,
+                                    name=name,
+                                    type=type_,
+                                    parent=parent,
+                                    date=update_date,
+                                    price=price)
                 unit.save()
 
             return OK_RESPONSE

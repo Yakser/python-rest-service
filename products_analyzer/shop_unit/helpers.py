@@ -38,7 +38,7 @@ def get_all_children(unit: ShopUnit, visited=None) -> set:
 
 
 def remove_timezone_suffix(date: str) -> str:
-    if date.endswith('Z'):
+    if date.strip().endswith('Z'):
         return date[:-1]
     return date
 
