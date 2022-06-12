@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from shop_unit.errors import (ITEM_NOT_FOUND_RESPONSE, OK_RESPONSE,
                               VALIDATION_FAILED_RESPONSE)
-from shop_unit.helpers import calculate_category_price, format_shop_unit_data, build_tree
+from shop_unit.helpers import format_shop_unit_data, build_tree
 from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
 from shop_unit.types import ShopUnitTypes
@@ -27,10 +27,6 @@ class ShopUnitDetail(APIView):
     def get(self, request, pk, format=None):
         try:
             shop_unit = ShopUnit.objects.get(pk=pk)
-
-            if shop_unit.type == ShopUnitTypes.CATEGORY.name:
-                shop_unit.price = calculate_category_price(shop_unit)
-                shop_unit.save()
 
             serializer = ShopUnitSerializer(shop_unit,
                                             context={'request': request})
