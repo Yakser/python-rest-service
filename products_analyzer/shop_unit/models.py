@@ -2,7 +2,8 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from shop_unit.types import ShopUnitTypes
 
@@ -56,6 +57,40 @@ class ShopUnit(models.Model):
                                                 не содержит товаров цена равна null.',
                                 blank=True)
 
+    def calculate_price(self) -> int | None:
+        if self.type == ShopUnitTypes.CATEGORY.name:
+            children = self.get_all_children()
+            count = len(children)
+            if count:
+                total_price = sum(child.price for child in children)
+                return int(total_price / count)
+            return None
+        else:
+            return self.price
+
+    def get_all_children(self, visited=None) -> set:
+        """
+        Returns all children of category. For Offer children is None
+
+        Args:
+            visited (set, optional): set() that contains added children of category.
+            Defaults to None.
+
+        Returns:
+            set: set of all children of this category
+        """
+
+        if visited is None:
+            visited = set()
+
+        for child in self.children.all():
+            if child.type == ShopUnitTypes.CATEGORY.name:
+                child.get_all_children(visited)
+            else:
+                visited.add(child)
+
+        return visited
+
     def clean(self):
         try:
             self._validate_all()
@@ -84,3 +119,14 @@ class ShopUnit(models.Model):
 
     def __str__(self):
         return f"ShopUnit<{self.name}>"
+
+
+@receiver(post_save, sender=ShopUnit)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    # update price
+    parent = instance.parent
+    if parent:
+        parent.price = parent.calculate_price()
+        # update date
+        parent.date = instance.date
+        parent.save()
