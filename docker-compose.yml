@@ -1,0 +1,16 @@
+version: "3.9"
+   
+services:
+  web:
+    build: .
+    command: python ./products_analyzer/manage.py runserver 0.0.0.0:80
+    volumes:
+      - .:/code
+    ports:
+      - "80:80"
+    expose:
+      - "80"
+    environment:
+     - SECRET_KEY=django-insecure-+t74h7iya172hydzb2)i=!&fb3w1mdpldj59jgupi7sb%%tyd)
+     - DEBUG=False
+     - API_BASEURL=http://0.0.0.0:80

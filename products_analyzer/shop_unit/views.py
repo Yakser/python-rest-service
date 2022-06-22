@@ -1,7 +1,6 @@
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from shop_unit.errors import (ITEM_NOT_FOUND_RESPONSE, OK_RESPONSE,
                               VALIDATION_FAILED_RESPONSE)
 from shop_unit.helpers import format_shop_unit_data, build_tree
