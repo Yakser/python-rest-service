@@ -1,5 +1,5 @@
 import uuid
-
+from typing import List
 from shop_unit.models import ShopUnit
 from shop_unit.serializers import ShopUnitSerializer
 from shop_unit.types import ShopUnitTypes
@@ -43,7 +43,7 @@ def get_cleaned_data(shop_unit: ShopUnit, request: Request) -> dict:
     return format_shop_unit_data(shop_unit, data)
 
 
-def build_tree(shop_unit: ShopUnit, request: Request, tree=None) -> list[dict]:
+def build_tree(shop_unit: ShopUnit, request: Request, tree=None) -> List[dict]:
     if tree is None:
         tree = []
 

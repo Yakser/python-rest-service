@@ -1,5 +1,5 @@
 import uuid
-
+from typing import Union
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
@@ -57,7 +57,7 @@ class ShopUnit(models.Model):
                                                 не содержит товаров цена равна null.',
                                 blank=True)
 
-    def calculate_price(self) -> int | None:
+    def calculate_price(self) -> Union[int, None]:
         if self.type == ShopUnitTypes.CATEGORY.name:
             children = self.get_all_children()
             count = len(children)
